@@ -11,6 +11,8 @@ buildscript {
 
         kotlin_version = '1.1.2-3'
 
+        novoda_bintray_release = '0.5.0'
+
         stetho_version = '1.4.1'
         constraint_layout_version = '1.0.2'
         easy_permission_version = '0.2.0'
