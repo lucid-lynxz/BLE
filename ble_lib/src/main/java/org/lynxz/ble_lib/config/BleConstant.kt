@@ -30,5 +30,10 @@ interface BleConstant {
         // 默认的mtu设定,若是超过20直接,则需要进行设备配置更新确认
         val DEFAULT_MTU_SIZE = 20
 
+        val AD_SERVICE_UUID = "00001130-0000-1000-8000-00805f9b34fb"
+        val AD_SERVICE_UUID_WITH_DATA = "00001131-0000-1000-8000-00805f9b34fb"
+
+        val RELAY_SERVICE_UUID = "00001132-0000-1000-8000-00805f9b34fb"
+        val RELAY_CHARACTERISTIC_UUID = "00001133-0000-1000-8000-00805f9b34fb"
     }
 }
