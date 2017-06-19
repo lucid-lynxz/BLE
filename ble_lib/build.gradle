@@ -1,6 +1,31 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.novoda.bintray-release' // must be applied after your artifact generating plugin (eg. java / com.android.library)
+
+publish {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+    bintrayUser = properties.getProperty('user')
+    bintrayKey = properties.getProperty('apikey')
+    dryRun = false
+
+    userOrg = 'lucid-lynxz'
+    groupId = 'org.lynxz.ble'
+    artifactId = 'ble'
+    publishVersion = '0.0.8'
+    website = 'https://github.com/lucid-lynxz/BLE'
+}
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.5.0'
+    }
+}
 
 android {
     compileSdkVersion compile_sdk_version
@@ -10,7 +35,7 @@ android {
         minSdkVersion min_sdk_version
         targetSdkVersion target_sdk_version
         versionCode 1
-        versionName "0.0.1"
+        versionName "0.0.2"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
