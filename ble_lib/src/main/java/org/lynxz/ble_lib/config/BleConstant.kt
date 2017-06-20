@@ -21,8 +21,13 @@ interface BleConstant {
          * */
         val MODE_PERIPHERAL_ONLY = 2
 
-        // 默认超时设定,10s, 若转发/接收一条消息超过10s,则超时返回
-        val DEFAULT_RELAY_TIME_OUT = 10 * 1000
+
+        // 蓝牙消息密文加密方式
+        val BLE_ENCRYPTION_TYPE_NONE = 0//0-未加密
+        val BLE_ENCRYPTION_TYPE_DES = 1// 1-DES加密
+
+        // ble默认超时设定,10s, 若转发/接收一条消息超过10s,则超时返回
+        val DEFAULT_RELAY_TIME_OUT = 10 * 1000L
 
         // 默认des加密使用的密钥(超过8字节)
         val DEFAULT_DES_KEY = "\$lynxz_ble"
@@ -35,5 +40,10 @@ interface BleConstant {
 
         val RELAY_SERVICE_UUID = "00001132-0000-1000-8000-00805f9b34fb"
         val RELAY_CHARACTERISTIC_UUID = "00001133-0000-1000-8000-00805f9b34fb"
+
+        // ble 转传时,主要内容体传输完成后,额外多发一个结束包,用于判断传输结束
+        val RELAY_DATA_SUCCESS = "okEod"//end of data
+        val RELAY_DATA_FAIL = "Eod"
+
     }
 }

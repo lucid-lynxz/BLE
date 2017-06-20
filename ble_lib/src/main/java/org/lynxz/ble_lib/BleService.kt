@@ -6,10 +6,7 @@ import android.bluetooth.*
 import android.bluetooth.le.*
 import android.content.Context
 import android.content.Intent
-import android.os.Binder
-import android.os.Build
-import android.os.Handler
-import android.os.Message
+import android.os.*
 import org.lynxz.ble_lib.callbacks.GattServerCallBack
 import org.lynxz.ble_lib.callbacks.OnRelayListener
 import org.lynxz.ble_lib.config.BleConstant
@@ -21,6 +18,11 @@ import org.lynxz.ble_lib.util.Logger
  * 蓝牙相关收发操作都放置于service中进行处理
  */
 class BleService : Service() {
+
+    companion object {
+        val TAG = "BleService"
+    }
+
     val mBinder: BleBinder? = null
 
     // 用于存储符合条件的蓝牙设备,已广播过滤码为准进行过滤操作
@@ -53,6 +55,8 @@ class BleService : Service() {
         gatt
     }
 
+
+    val AUTO_STOP_SCAN_DELAY = 10 * 1000L//启动扫描后10秒,自动停止扫描
     val MSG_TYPE_AUTO_START_SCAN = 1//自动开始扫描ble设备
     val MSG_TYPE_AUTO_STOP_SCAN = 2//自动停止扫描
     val MSG_TYPE_START_SEND_DATA = 3//开始对扫描到的ble设备列表进行数据转传
@@ -233,6 +237,56 @@ class BleService : Service() {
         }
     }
 
+    /**
+     * 定期重新扫描
+     * */
+    private val mStartScanRunnable = Runnable {
+        mHandler.removeMessages(MSG_TYPE_AUTO_STOP_SCAN)
+        val msg = mHandler.obtainMessage(MSG_TYPE_AUTO_START_SCAN)
+        mHandler.sendMessage(msg)
+    }
+
+    /**
+     * 用户是否开启蓝牙功能
+     */
+    private fun isBluetoothEnable(): Boolean {
+        return mBluetoothAdapter?.isEnabled ?: false
+    }
+
+    /**
+     * 创建广播设置参数
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun createAdSettings(connectable: Boolean, timeoutMillis: Int): AdvertiseSettings? {
+        if (!isSupportBle()) {
+            return null
+        }
+        val mAdvertiseSettings = AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+                .setConnectable(connectable)
+                .setTimeout(timeoutMillis)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                .build()
+        Logger.d("mAdvertiseSettings = $mAdvertiseSettings", TAG)
+        return mAdvertiseSettings
+    }
+
+
+    /**
+     * 创建广播数据
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun createAdData(): AdvertiseData? {
+        if (!isSupportBle()) {
+            return null
+        }
+        return AdvertiseData.Builder()
+                .setIncludeDeviceName(true)
+                //                .addServiceUuid(ParcelUuid.fromString(BleConstant.AD_SERVICE_UUID))
+                .addServiceData(ParcelUuid.fromString(BleConstant.AD_SERVICE_UUID_WITH_DATA), BlePara.adCharacteristicValue.toByteArray())
+                .build()
+    }
+
     inner class BleBinder : Binder() {
         var onRelayListener: OnRelayListener? = null
             set(value) {
@@ -245,7 +299,23 @@ class BleService : Service() {
          */
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         fun startScanLeDevices() {
+            if (isScanningBle || !isSupportBle() || mBluetoothLeScanner == null) {
+                Logger.d("ble is scanning or not support ble , return ...")
+                return
+            }
 
+            mHandler.removeMessages(MSG_TYPE_AUTO_STOP_SCAN)
+            mHandler.removeCallbacks(mStartScanRunnable)
+            mBluetoothLeScanner?.startScan(mLeScanCallback)
+            isScanningBle = true
+            // 自动停止扫描
+            val msg = mHandler.obtainMessage(MSG_TYPE_AUTO_STOP_SCAN)
+            mHandler.sendMessageDelayed(msg, AUTO_STOP_SCAN_DELAY)
+            /*
+                 * 定制开始重新扫描ble设备
+                 * 目前设定是每2分钟头10s扫描,即间隔50s执行一次10s的扫描
+                 */
+            mHandler.postDelayed(mStartScanRunnable, 120000)
         }
 
         /**
@@ -253,7 +323,9 @@ class BleService : Service() {
          */
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         fun stopScanLeDevices() {
-
+            mHandler.removeMessages(MSG_TYPE_AUTO_STOP_SCAN)
+            mBluetoothLeScanner?.stopScan(mLeScanCallback)
+            isScanningBle = false
         }
 
         /**
@@ -261,8 +333,20 @@ class BleService : Service() {
          */
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         fun startAdvertising() {
+            if (isBluetoothEnable()
+                    && !isAdvertising
+                    && isSupportAdvertisement
+                    && mBluetoothLeAdvertiser != null
+                    && mGattServer != null) {
+                val success = mGattServerCallBack.setupServices(mGattServer)
+                Logger.d("startAdvertising result  = $success ", TAG)
+                if (success) {
+                    mBluetoothLeAdvertiser?.startAdvertising(createAdSettings(true, 0), createAdData(), mAdCallback)
+                }
+            } else {
+                Logger.d("startAdvertising fail", TAG)
+            }
         }
-
 
         /**
          * 停止广播
@@ -271,7 +355,8 @@ class BleService : Service() {
          */
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         fun stopAdvertising() {
-
+            mBluetoothLeAdvertiser?.stopAdvertising(mAdCallback)
+            isAdvertising = false
         }
 
 
@@ -287,7 +372,6 @@ class BleService : Service() {
          * 释放相关资源
          */
         fun release() {
-
         }
 
     }

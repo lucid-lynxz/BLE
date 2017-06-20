@@ -8,5 +8,5 @@ interface OnRelayListener {
     /**
      * 收到转传信息
      * */
-    fun onReceive(msg: String)
+    fun onReceive(msg: String?)
 }
