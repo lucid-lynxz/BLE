@@ -12,6 +12,7 @@ import org.lynxz.ble_lib.callbacks.OnRelayListener
 import org.lynxz.ble_lib.config.BleConstant
 import org.lynxz.ble_lib.config.BlePara
 import org.lynxz.ble_lib.util.Logger
+import org.lynxz.ble_lib.util.RelayUtil
 
 /**
  * Created by lynxz on 19/06/2017.
@@ -23,7 +24,7 @@ class BleService : Service() {
         val TAG = "BleService"
     }
 
-    val mBinder: BleBinder? = null
+    val mBinder: BleBinder  by lazy { BleBinder() }
 
     // 用于存储符合条件的蓝牙设备,已广播过滤码为准进行过滤操作
     val mDevices: MutableList<BluetoothDevice> = mutableListOf()
@@ -55,6 +56,20 @@ class BleService : Service() {
         gatt
     }
 
+    /**
+     * 发送数据超时器
+     */
+    private val mCountDownTimer = object : CountDownTimer(BleConstant.DEFAULT_RELAY_TIME_OUT, BleConstant.DEFAULT_RELAY_TIME_OUT) {
+        override fun onTick(millisUntilFinished: Long) {
+
+        }
+
+        @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        override fun onFinish() {
+            Logger.d("mCountDownTimer 已超时,进行下一台设备的数据发送", TAG)
+//            skipToNextDevice()
+        }
+    }
 
     val AUTO_STOP_SCAN_DELAY = 10 * 1000L//启动扫描后10秒,自动停止扫描
     val MSG_TYPE_AUTO_START_SCAN = 1//自动开始扫描ble设备
@@ -62,27 +77,79 @@ class BleService : Service() {
     val MSG_TYPE_START_SEND_DATA = 3//开始对扫描到的ble设备列表进行数据转传
     val MSG_TYPE_SEND_DATA_TO_THE_GATT = 4//ble连接成功并扫描到service后,开始进行数据发送
     val MSG_TYPE_SEND_DATA_TO_NEXT = 5//请进行下一个ble设备的数据转传
+
+    var mCurrentRelayMsg: String = ""
+    var currentRelayBleIndex = -1//当前进行转传的ble设备在mDevices列表中的序号,-1表示未开始
+
     val mHandler = object : Handler() {
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         override fun handleMessage(msg: Message?) {
             super.handleMessage(msg)
-        }
+            val size = mDevices.size
+            when (msg?.what) {
+                MSG_TYPE_AUTO_START_SCAN -> mBinder?.startScanLeDevices()
+                MSG_TYPE_AUTO_STOP_SCAN -> mBinder?.stopScanLeDevices()
+                MSG_TYPE_START_SEND_DATA -> if (size > 0) {
+                    disconnectLastGatt()
+                    currentRelayBleIndex = 0
+                    val targetDevice = mDevices[currentRelayBleIndex]
+                    mCountDownTimer.start()
+                    mGatt = targetDevice.connectGatt(this@BleService, false, mGattCallback)
+                } else {
+                    currentRelayBleIndex = -1
+                }
 
+                MSG_TYPE_SEND_DATA_TO_THE_GATT -> {
+                    val gatt = msg.obj as BluetoothGatt
+                    val relayData = RelayUtil.relayData(gatt, mCurrentRelayMsg)
+                    Logger.d("发送数据给设备是否成功: " + relayData)
+//                    Thread(Runnable { sendDataByCharacteristic(gatt, mCurrentBdData) }).start()
+                    sendEmptyMessage(MSG_TYPE_SEND_DATA_TO_NEXT)
+                }
+
+                MSG_TYPE_SEND_DATA_TO_NEXT -> if (size > 0) {
+                    mCountDownTimer.cancel()
+                    disconnectLastGatt()
+                    currentRelayBleIndex += 1
+                    if (currentRelayBleIndex >= 0 && currentRelayBleIndex < size) {
+                        val device = mDevices[currentRelayBleIndex]
+                        // 这里其实可以多加一个判断转传信息来源与要发送的目标设备不是同一台设备,避免信息重复传输,不过貌似蓝牙mac地址动态变化,也不一定有效,在此省略
+                        Logger.d("正准备进行下一台设备的转传: $currentRelayBleIndex/$size", TAG)
+                        mCountDownTimer.start()
+                        mGatt = device.connectGatt(this@BleService, false, mGattCallback)
+                    } else {
+                        currentRelayBleIndex = -1
+                    }
+                }
+            }
+        }
     }
 
-    override fun onBind(intent: Intent?) = mBinder
+    override fun onBind(intent: Intent?): IBinder? {
+        return mBinder
+    }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreate() {
         super.onCreate()
         initBleSettings()
         Logger.d("ble service onCreated...")
-
     }
 
+    /**
+     * 关闭上一次的连接
+     * */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-            /**
-             * 初始化ble设定
-             * */
+    private fun disconnectLastGatt() {
+        mGatt?.disconnect()
+        //            mGatt?.close();
+        //            mGatt = null;
+    }
+
+    /**
+     * 初始化ble设定
+     * */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     fun initBleSettings() {
         if (!isSupportBle()) {
             return
@@ -365,7 +432,13 @@ class BleService : Service() {
          *
          * @param msg 要转传的信息
          */
-        fun relayData(msg: String) {
+        fun relayData(msg: String?) {
+            if (msg != null && msg.isNotEmpty()) {
+                mCurrentRelayMsg = msg
+                val msg = mHandler.obtainMessage(MSG_TYPE_START_SEND_DATA)
+                msg.obj = msg
+                mHandler.sendMessage(msg)
+            }
         }
 
         /**

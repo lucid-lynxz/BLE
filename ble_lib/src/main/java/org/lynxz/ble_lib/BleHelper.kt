@@ -1,9 +1,11 @@
 package org.lynxz.ble_lib
 
+import android.annotation.TargetApi
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.IBinder
 import org.lynxz.ble_lib.config.BleConstant
 import org.lynxz.ble_lib.config.BlePara
@@ -13,6 +15,7 @@ import org.lynxz.ble_lib.util.Logger
  * Created by lynxz on 19/06/2017.
  * 低功耗蓝牙帮助类
  */
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 object BleHelper : BaseRelayHelper() {
     var mContext: Context? = null
     var mBleServiceIntent: Intent? = null
@@ -23,6 +26,10 @@ object BleHelper : BaseRelayHelper() {
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             mBleBinder = service as BleService.BleBinder?
+            mBleBinder?.onRelayListener = onRelayListener
+            Logger.d("连接service成功",TAG)
+            mBleBinder?.startAdvertising()
+            mBleBinder?.startScanLeDevices()
         }
     }
 

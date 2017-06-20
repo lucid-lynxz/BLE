@@ -22,6 +22,9 @@ interface BleConstant {
         val MODE_PERIPHERAL_ONLY = 2
 
 
+        // 当前蓝牙协议版本
+        val BLE_PROTOCOL_VERSION = 0
+
         // 蓝牙消息密文加密方式
         val BLE_ENCRYPTION_TYPE_NONE = 0//0-未加密
         val BLE_ENCRYPTION_TYPE_DES = 1// 1-DES加密
