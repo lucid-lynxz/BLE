@@ -1,5 +1,6 @@
 package org.lynxz.ble_lib
 
+import android.Manifest
 import android.annotation.TargetApi
 import android.content.ComponentName
 import android.content.Context
@@ -7,6 +8,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
+import android.support.v4.content.PermissionChecker
 import org.lynxz.ble_lib.config.BleConstant
 import org.lynxz.ble_lib.config.BlePara
 import org.lynxz.ble_lib.util.Logger
@@ -20,6 +22,7 @@ object BleHelper : BaseRelayHelper() {
     var mContext: Context? = null
     var mBleServiceIntent: Intent? = null
     var mBleBinder: BleService.BleBinder? = null
+    var mEnable: Boolean = false // 接收/转传和广播功能是否可用
     val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
         }
@@ -27,10 +30,27 @@ object BleHelper : BaseRelayHelper() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             mBleBinder = service as BleService.BleBinder?
             mBleBinder?.onRelayListener = onRelayListener
-            Logger.d("连接service成功",TAG)
-            mBleBinder?.startAdvertising()
-            mBleBinder?.startScanLeDevices()
+            Logger.d("连接service成功", TAG)
+            if (mEnable) start()
         }
+    }
+
+    /**
+     * 开启接收和转传功能
+     * */
+    fun start() {
+        mEnable = true
+        mBleBinder?.startAdvertising()
+        mBleBinder?.startScanLeDevices()
+    }
+
+    /**
+     * 停止接收和转传和广播
+     * */
+    fun stop() {
+        mEnable = false
+        mBleBinder?.stopAdvertising()
+        mBleBinder?.stopScanLeDevices()
     }
 
     override fun init(context: Context): Int {
@@ -50,25 +70,47 @@ object BleHelper : BaseRelayHelper() {
      *  * 双工 [BleConstant.MODE_BOTH][BleConstant.MODE_BOTH]
      *  * 只可收 [BleConstant.MODE_PERIPHERAL_ONLY][BleConstant.MODE_PERIPHERAL_ONLY]
      *  * 只可发 [BleConstant.MODE_BOTH][BleConstant.MODE_CENTRAL_ONLY]
-     * @param desKey des加密密钥,默认值为 [BleConstant.DEFAULT_DES_KEY][BleConstant.DEFAULT_DES_KEY]
+     * @param desKey des加密密钥,默认值为 [BleConstant.DEFAULT_DES_KEY][BleConstant.DEFAULT_DES_KEY],传入null则使用默认值
      * @param adCharacteristicValue 默认值为 "" ,即表示不做过滤
      * */
-    private fun updatePara(mode: Int = BleConstant.MODE_BOTH,
-                           adCharacteristicValue: String = "",
-                           desKey: String = BleConstant.DEFAULT_DES_KEY): Int {
-        if (mode < 0 || mode > 3 || desKey.length < 8 || adCharacteristicValue.length > 20) {
+    fun updatePara(context: Context?,
+                   mode: Int = BleConstant.MODE_BOTH,
+                   adCharacteristicValue: String = "",
+                   desKey: String? = BleConstant.DEFAULT_DES_KEY): Int {
+        var finalDesKey = desKey
+        if (finalDesKey == null) {
+            finalDesKey = BleConstant.DEFAULT_DES_KEY
+        }
+
+        if (context == null
+                || mode < 0 || mode > 3
+                || finalDesKey.length < 8
+                || adCharacteristicValue.length > 20) {
             return RelayCode.ERR_PARA_INVALID
         }
 
+        if (!context.isSupportBle()) {
+            return RelayCode.ERR_NOT_SUPPORT
+        } else if (!isBluetoothOn(context)) {
+            return RelayCode.ERR_BLUETOOTH_DISABLE
+        }
+
+        // 需要定位权限
+        val hasLocationPermission =
+                PermissionChecker.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PermissionChecker.PERMISSION_GRANTED
+        if (!hasLocationPermission) {
+            return RelayCode.ERR_LACK_LOCATION_PERMISSION
+        }
+
         BlePara.mode = mode
-        BlePara.desKey = desKey
+        BlePara.desKey = finalDesKey
         BlePara.adCharacteristicValue = adCharacteristicValue
         updateBleService()
         return RelayCode.SUCCESS
     }
 
     /**
-     * 按照用户设定的新参数来更新service动作
+     * todo 按照用户设定的新参数来更新service动作
      * */
     private fun updateBleService() {
 
@@ -95,7 +137,7 @@ object BleHelper : BaseRelayHelper() {
         fun build(): BleHelper {
             with(BleHelper) {
                 init(context)
-                updatePara(mode, adCharacteristicValue, desKey)
+                updatePara(context, mode, adCharacteristicValue, desKey)
             }
             return BleHelper
         }

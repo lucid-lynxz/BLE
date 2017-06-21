@@ -43,9 +43,12 @@ dependencies {
     compile project(':ble_lib')
 
     // 权限
-    compile "pub.devrel:easypermissions:$easy_permission_version"
+    compile "com.tbruyelle.rxpermissions2:rxpermissions:$rx_permission_version"
     // gson
     compile "com.google.code.gson:gson:$gson_version"
     // kotlin
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    // rxjava
+    compile "io.reactivex.rxjava2:rxjava:$rxjava_version"
+    compile "io.reactivex.rxjava2:rxandroid:$rxandroid_version"
 }

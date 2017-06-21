@@ -16,7 +16,9 @@ buildscript {
 
         stetho_version = '1.4.1'
         constraint_layout_version = '1.0.2'
-        easy_permission_version = '0.2.0'
+        rx_permission_version = '0.9.4@aar'
+        rxjava_version = '2.1.0'
+        rxandroid_version = '2.0.1'
         gson_version = '2.4'
     }
 

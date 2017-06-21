@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.text.TextUtils
+import android.widget.Toast
 import org.lynxz.ble_lib.util.Logger
 import java.util.zip.CRC32
 
@@ -89,4 +90,12 @@ fun Any.crc32(content: ByteArray?): Long {
     val c32 = CRC32()
     c32.update(content)
     return c32.value
+}
+
+fun Context.showToast(msg: String) {
+    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+}
+
+fun Context.showToast(msgId: Int) {
+    Toast.makeText(this, msgId, Toast.LENGTH_SHORT).show()
 }

@@ -162,7 +162,8 @@ class BleService : Service() {
             mBluetoothLeScanner = mBluetoothAdapter?.bluetoothLeScanner
             mBluetoothLeAdvertiser = mBluetoothAdapter?.bluetoothLeAdvertiser
             isSupportAdvertisement = mBluetoothAdapter?.isMultipleAdvertisementSupported ?: false
-            mBluetoothManager?.openGattServer(this, mGattServerCallBack)
+            mGattServer = mBluetoothManager?.openGattServer(this, mGattServerCallBack)
+            Logger.d("mGattServer created .... " + mGattServer)
         }
 
         // 低功耗蓝牙扫描回调

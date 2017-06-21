@@ -24,7 +24,7 @@ object Logger {
     val MIN_STACK_OFFSET = 3
 
     private var TAG = "logger"
-    var logLevel = NONE_LEVEL // 需要打印的日志等级(大于等于该等级的日志会被打印)
+    var logLevel = DEBUG_LEVEL // 需要打印的日志等级(大于等于该等级的日志会被打印)
 
     @JvmStatic fun init(level: Int, clazz: Class<*>) {
         TAG = clazz.simpleName
