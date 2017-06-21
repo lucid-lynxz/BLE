@@ -19,9 +19,8 @@ class GattServerCallBack : BluetoothGattServerCallback() {
         private val TAG = "GattServerCallBack"
     }
 
-    var onRelayListener: OnRelayListener? = null
+    var onRelayListener: OnRelayListener? = null// 回调接口,用于收到信息后发送给app层
     private var mGattServer: BluetoothGattServer? = null
-    private var mOnRelayListener: OnRelayListener? = null // 回调接口,用于收到信息后发送给app层
 
     /**
      * 当前与本机交互的蓝牙设备相关信息及数据包
@@ -117,7 +116,7 @@ class GattServerCallBack : BluetoothGattServerCallback() {
             val valid = mCurrentBlePackage.isValid
             Logger.d("完成接收ble数据,解析结果 valid = $valid  发送方是: ${device?.address} ${device?.name}")
             if (valid) {
-                mOnRelayListener?.onReceive(mCurrentBlePackage.plainContent)
+                onRelayListener?.onReceive(mCurrentBlePackage.plainContent)
             }
             mCurrentBlePackage = BleDataPackage()
         }

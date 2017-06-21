@@ -35,8 +35,6 @@ class BleService : Service() {
     private var isScanningBle = false // 是否正在扫描ble设备
     private var isSupportAdvertisement = false// 是否支持peripheral模式
 
-    private var mOnRelayListener: OnRelayListener? = null
-
     var mBluetoothManager: BluetoothManager? = null
     var mBluetoothAdapter: BluetoothAdapter? = null
 
@@ -358,6 +356,7 @@ class BleService : Service() {
     inner class BleBinder : Binder() {
         var onRelayListener: OnRelayListener? = null
             set(value) {
+                field = value
                 mGattServerCallBack.onRelayListener = value
             }
 

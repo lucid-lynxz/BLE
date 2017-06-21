@@ -2,6 +2,8 @@ package org.lynxz.ble
 
 import android.Manifest
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.support.v7.app.AppCompatActivity
 import com.tbruyelle.rxpermissions2.RxPermissions
 import kotlinx.android.synthetic.main.activity_main.*
@@ -25,7 +27,13 @@ class MainActivity : AppCompatActivity() {
             Logger.d("更新ble参数结果: $updatePara")
             onRelayListener = object : OnRelayListener {
                 override fun onReceive(msg: String?) {
-                    tv_info.text = "收到蓝牙转传数据:\n$msg"
+//                    runOnUiThread {
+//                        tv_info.text = "收到蓝牙转传数据:\n$msg"
+//                    }
+                    Logger.d("app收到蓝牙数据: $msg")
+                    val msgObj = mHandler.obtainMessage(MSG_TYPE_SHOW_BLE_DATA)
+                    msgObj.obj = msg
+                    mHandler.sendMessage(msgObj)
                 }
             }
         }
@@ -41,6 +49,16 @@ class MainActivity : AppCompatActivity() {
             } else {
                 BleHelper.relayData(msg)
             }
+        }
+    }
+
+    val MSG_TYPE_SHOW_BLE_DATA = 100
+    private val mHandler = object : Handler() {
+        override fun handleMessage(msg: Message) {
+            if (msg.what == MSG_TYPE_SHOW_BLE_DATA) {
+                tv_info.text = "收到数据: ${msg.obj}"
+            }
+
         }
     }
 
