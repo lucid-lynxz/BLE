@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.tbruyelle.rxpermissions2.RxPermissions
+import kotlinx.android.synthetic.main.activity_main.*
 import org.lynxz.ble_lib.BleHelper
 import org.lynxz.ble_lib.callbacks.OnRelayListener
 import org.lynxz.ble_lib.config.BleConstant
@@ -24,12 +25,25 @@ class MainActivity : AppCompatActivity() {
             Logger.d("更新ble参数结果: $updatePara")
             onRelayListener = object : OnRelayListener {
                 override fun onReceive(msg: String?) {
-                    Logger.d("收到蓝牙转传数据 $msg")
+                    tv_info.text = "收到蓝牙转传数据:\n$msg"
                 }
             }
+        }
 
+        btn_start_scan.setOnClickListener { BleHelper.startScan() }
+        btn_stop_scan.setOnClickListener { BleHelper.stopScan() }
+        btn_start_advertising.setOnClickListener { BleHelper.startAdvertising() }
+        btn_stop_advertising.setOnClickListener { BleHelper.stopAdvertising() }
+        btn_send.setOnClickListener {
+            val msg = edt_relay_info.text.toString()
+            if (msg.isEmpty()) {
+                showToast("请输入内容后重试")
+            } else {
+                BleHelper.relayData(msg)
+            }
         }
     }
+
 
     /**
      * 扫描时需要定位权限

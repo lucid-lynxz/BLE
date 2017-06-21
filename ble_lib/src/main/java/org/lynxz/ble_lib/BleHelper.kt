@@ -44,6 +44,27 @@ object BleHelper : BaseRelayHelper() {
         mBleBinder?.startScanLeDevices()
     }
 
+    fun startScan() {
+        mEnable = true
+        mBleBinder?.startScanLeDevices()
+    }
+
+    fun stopScan() {
+        mEnable = false
+        mBleBinder?.stopScanLeDevices()
+    }
+
+    fun startAdvertising() {
+        mEnable = true
+        mBleBinder?.startAdvertising()
+    }
+
+    fun stopAdvertising() {
+        mEnable = false
+        mBleBinder?.stopAdvertising()
+    }
+
+
     /**
      * 停止接收和转传和广播
      * */
@@ -94,6 +115,7 @@ object BleHelper : BaseRelayHelper() {
         } else if (!isBluetoothOn(context)) {
             return RelayCode.ERR_BLUETOOTH_DISABLE
         }
+        // todo by zxz 20170621 判断用户手机gps定位是否开启,若未开启,则可能无法扫描到其他设备
 
         // 需要定位权限
         val hasLocationPermission =
@@ -121,25 +143,7 @@ object BleHelper : BaseRelayHelper() {
             Logger.d("relay data fail as msg is empty")
             return RelayCode.ERR_PARA_INVALID
         }
+        mBleBinder?.relayData(msg)
         return RelayCode.SUCCESS
-    }
-
-    /**
-     * @param context 不能为空
-     * @param mode ble模式设定
-     * @param adCharacteristicValue 广播时,用于标识应用特征码的内容,不能超过20字节
-     * @param desKey 内容进行des加密key,不少于8字节
-     * */
-    data class Builder @JvmOverloads constructor(var context: Context,
-                                                 var mode: Int = BleConstant.MODE_BOTH,
-                                                 var adCharacteristicValue: String = "",
-                                                 var desKey: String = BleConstant.DEFAULT_DES_KEY) {
-        fun build(): BleHelper {
-            with(BleHelper) {
-                init(context)
-                updatePara(context, mode, adCharacteristicValue, desKey)
-            }
-            return BleHelper
-        }
     }
 }

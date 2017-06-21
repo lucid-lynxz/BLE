@@ -36,6 +36,7 @@ object RelayUtil {
         headPackage[1] = ByteUtil.toByteArray(BleConstant.BLE_ENCRYPTION_TYPE_DES, 1)[0]//加密类型,1字节
 
         // 密文crc校验码
+        Logger.d("要发送的数据是: $msg")
         val encryptedContentBytes = DESUtil.enCrypto(msg.toByteArray(), BlePara.desKey)// 加密后的字符串
         if (encryptedContentBytes == null) {
             Logger.d("加密失败,不进行ble转传")
@@ -45,6 +46,7 @@ object RelayUtil {
         val crcResult = crc32(encryptedContentBytes)
         val crcResultBytes = ByteUtil.longToBytes(crcResult)
         headPackage[2] = ByteUtil.toByteArray(crcResultBytes.size, 1)[0]// crc校验结果长度,其实不用设置,固定8字节
+        Logger.d("发送时,校验密文crc结果: $crcResult  ${crcResultBytes.size}")
 
         System.arraycopy(crcResultBytes, 0, headPackage, 3, crcResultBytes.size)
 
@@ -71,7 +73,7 @@ object RelayUtil {
 
             var i = 0
             while (i < size) {
-                var to = i + BlePara.mtu
+                var to = i + 20
                 if (to >= size) {
                     to = size
                 }

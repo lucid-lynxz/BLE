@@ -52,7 +52,7 @@ class BleService : Service() {
 
     val mGattServerCallBack: GattServerCallBack by lazy {
         val gatt = GattServerCallBack()
-        gatt.onRelayListener = mBinder?.onRelayListener
+        gatt.onRelayListener = mBinder.onRelayListener
         gatt
     }
 
@@ -81,14 +81,14 @@ class BleService : Service() {
     var mCurrentRelayMsg: String = ""
     var currentRelayBleIndex = -1//当前进行转传的ble设备在mDevices列表中的序号,-1表示未开始
 
-    val mHandler = object : Handler() {
+    val mHandler = object : Handler(Looper.getMainLooper()) {
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         override fun handleMessage(msg: Message?) {
             super.handleMessage(msg)
             val size = mDevices.size
             when (msg?.what) {
-                MSG_TYPE_AUTO_START_SCAN -> mBinder?.startScanLeDevices()
-                MSG_TYPE_AUTO_STOP_SCAN -> mBinder?.stopScanLeDevices()
+                MSG_TYPE_AUTO_START_SCAN -> mBinder.startScanLeDevices()
+                MSG_TYPE_AUTO_STOP_SCAN -> mBinder.stopScanLeDevices()
                 MSG_TYPE_START_SEND_DATA -> if (size > 0) {
                     disconnectLastGatt()
                     currentRelayBleIndex = 0
@@ -436,9 +436,10 @@ class BleService : Service() {
         fun relayData(msg: String?) {
             if (msg != null && msg.isNotEmpty()) {
                 mCurrentRelayMsg = msg
-                val msg = mHandler.obtainMessage(MSG_TYPE_START_SEND_DATA)
-                msg.obj = msg
-                mHandler.sendMessage(msg)
+//                val msgNext = mHandler.obtainMessage(MSG_TYPE_START_SEND_DATA)
+//                msgNext.obj = msg
+//                mHandler.sendMessage(msgNext)
+                mHandler.sendEmptyMessage(MSG_TYPE_START_SEND_DATA)
             }
         }
 

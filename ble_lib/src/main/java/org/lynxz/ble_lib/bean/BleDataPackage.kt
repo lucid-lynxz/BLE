@@ -59,12 +59,12 @@ class BleDataPackage : Serializable {
 
     // 计算得到一些结果
     private var calcCrcResult: Long = 0// 接收端计算的crc结果,占用5~8个字节(测试了大概10k的数据,得到的范围)
-        get() {
-            if (field == 0L) {
-                field = crc32(encryptedContent)
-            }
-            return field
-        }
+//        get() {
+//            if (field == 0L) {
+//                field = crc32(encryptedContent)
+//            }
+//            return field
+//        }
 
     var isValid: Boolean = false// 接收的数据包是否有效,通过crc校验以及最后的结果以及加密串长度
     var isFinished: Boolean = false// 本轮接收数据是否完成
@@ -92,12 +92,12 @@ class BleDataPackage : Serializable {
      * @return true-表示本次接收到的是一个有效的head包  false-接收中/接收结束
      */
     fun processReceiveBleData(device: BluetoothDevice?, value: ByteArray?): Boolean {
-        if (isFinished) return false
+        if (isFinished || value == null) return false
 
         // 根据记录的remoteDevice是否为空,来判定是否是新一轮的数据传输
         if (remoteDevice == null) {
+            Logger.d("收到的 head 包大小为: ${value.size}", TAG)
             val updateResult = updateHeadInfo(device, value)
-            Logger.d("收到的 head 包大小为: ${value?.size}", TAG)
 
             // 若收取的head包解析失败,则结束本轮接收
             if (!updateResult) {
@@ -107,7 +107,7 @@ class BleDataPackage : Serializable {
                 mBufferContentSize = 0
             }
             return updateResult
-        } else if (remoteDevice?.address.equals(device?.address, ignoreCase = true) && value != null) {
+        } else if (remoteDevice?.address.equals(device?.address, ignoreCase = true)) {
             val msg = String(value)
             // 若通过密文内容长度来判断是否传输结束失败(比如丢包了),则通过tail包来判断,若tail包也丢包,则通过超时来判断
             when (msg) {
@@ -147,13 +147,13 @@ class BleDataPackage : Serializable {
         // 对密文进行解密处理
         val encryptedContentBytes = Arrays.copyOf(mBuffer, mBufferContentSize)
         // 判断crc校验结果是否一致
-        calcCrcResult = crc32(encryptedContent)
+        calcCrcResult = crc32(encryptedContentBytes)
 
         // 判断消息主体部分(密文)长度是否一致
         if (encryptedContentLength != mBufferContentSize
                 || calcCrcResult != crcResult) {
             isValid = false
-            Logger.d("ble数据接收完成,但判断不合法 $encryptedContentLength v.s. $mBufferContentSize  \n $calcCrcResult v.s. $crcResult", TAG)
+            Logger.d("ble数据接收完成,但判断不合法 length => $encryptedContentLength v.s. $mBufferContentSize  ,crc => $calcCrcResult v.s. $crcResult", TAG)
             return
         }
 
@@ -171,7 +171,7 @@ class BleDataPackage : Serializable {
         }
 
         isValid = true
-        Logger.d("ble数据接收完成,且合法")
+        Logger.d("ble数据接收完成,且合法 $plainContent")
     }
 
     /**
@@ -197,6 +197,8 @@ class BleDataPackage : Serializable {
         remoteDevice = device
         try {
             crcResult = ByteUtil.bytesToLong(Arrays.copyOfRange(head, 3, 3 + crcResultLength))[0]
+            val crc1 = ByteUtil.bytesToLong(Arrays.copyOfRange(head, 3, 3 + crcResultLength))[0]
+            Logger.d("计算crc $crcResult => $crc1")
             encryptedContentLength = ByteUtil.toInt(Arrays.copyOfRange(head, 3 + crcResultLength, 7 + crcResultLength))
             if (encryptedContentLength >= kotlin.io.DEFAULT_BUFFER_SIZE) {
                 //太长的话就直接过滤掉,默认已经达到10k大小了,不然可能会oom

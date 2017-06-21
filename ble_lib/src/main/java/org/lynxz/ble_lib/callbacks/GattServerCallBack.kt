@@ -2,6 +2,7 @@ package org.lynxz.ble_lib.callbacks
 
 import android.bluetooth.*
 import android.os.CountDownTimer
+import android.os.Looper
 import org.lynxz.ble_lib.bean.BleDataPackage
 import org.lynxz.ble_lib.config.BleConstant
 import org.lynxz.ble_lib.config.BlePara
@@ -32,6 +33,7 @@ class GattServerCallBack : BluetoothGattServerCallback() {
      * 超时后,丢弃本次接收,并开始新的接收
      * */
     private val mCountdownTimer: CountDownTimer by lazy {
+        Looper.prepare()
         object : CountDownTimer(BleConstant.DEFAULT_RELAY_TIME_OUT, BleConstant.DEFAULT_RELAY_TIME_OUT) {
             override fun onFinish() {
             }
@@ -105,7 +107,9 @@ class GattServerCallBack : BluetoothGattServerCallback() {
         // 处理收到的数据
         // 判断是否是 head 控制头信息,若是,则表明这是一个新数据包
         val isNewData = mCurrentBlePackage.processReceiveBleData(device, value)
-        if (isNewData) mCountdownTimer.start() // 开始接收一个新数据, 开启超时判定
+        if (isNewData) {// 开始接收一个新数据, 开启超时判定
+            mCountdownTimer.start()
+        }
 
         // 已完成接收的情况
         if (mCurrentBlePackage.isFinished) {
