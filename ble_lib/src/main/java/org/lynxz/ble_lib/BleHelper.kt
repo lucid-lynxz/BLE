@@ -92,7 +92,7 @@ object BleHelper : BaseRelayHelper() {
      *  * 只可收 [BleConstant.MODE_PERIPHERAL_ONLY][BleConstant.MODE_PERIPHERAL_ONLY]
      *  * 只可发 [BleConstant.MODE_BOTH][BleConstant.MODE_CENTRAL_ONLY]
      * @param desKey des加密密钥,默认值为 [BleConstant.DEFAULT_DES_KEY][BleConstant.DEFAULT_DES_KEY],传入null则使用默认值
-     * @param adCharacteristicValue 默认值为 "" ,即表示不做过滤
+     * @param adCharacteristicValue 默认值为 "" ,即表示不做过滤,此处禁止设置超过10字节的信息, 测试发现有些机型是14,16不等
      * */
     fun updatePara(context: Context?,
                    mode: Int = BleConstant.MODE_BOTH,
@@ -106,7 +106,7 @@ object BleHelper : BaseRelayHelper() {
         if (context == null
                 || mode < 0 || mode > 3
                 || finalDesKey.length < 8
-                || adCharacteristicValue.length > 20) {
+                || adCharacteristicValue.toByteArray().size > 10) {
             return RelayCode.ERR_PARA_INVALID
         }
 

@@ -23,8 +23,9 @@ class MainActivity : AppCompatActivity() {
 
         with(BleHelper) {
             init(this@MainActivity)
-            val updatePara = updatePara(this@MainActivity, BleConstant.MODE_BOTH, "hello", null)
-            Logger.d("更新ble参数结果: $updatePara")
+            val keyInfo = "hello"
+            val updatePara = updatePara(this@MainActivity, BleConstant.MODE_BOTH, keyInfo, null)
+            Logger.d("更新ble参数结果: $updatePara  ${keyInfo.toByteArray().size}")
             onRelayListener = object : OnRelayListener {
                 override fun onReceive(msg: String?) {
 //                    runOnUiThread {
