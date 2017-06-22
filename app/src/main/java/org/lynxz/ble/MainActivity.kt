@@ -29,28 +29,25 @@ class MainActivity : AppCompatActivity() {
             val updatePara = updatePara(this@MainActivity, BleConstant.MODE_BOTH, keyInfo, null)
             Logger.d("更新ble参数结果: $updatePara  ${keyInfo.toByteArray().size}")
 
-            var msg = "设置参数成功"
+            var initMsg = "设置参数成功"
             when (updatePara) {
-                RelayCode.ERR_PARA_INVALID -> msg = "设置失败: 参数不合法"
-                RelayCode.ERR_NOT_SUPPORT -> msg = "设置失败: 系统不支持低功耗蓝牙(5.0以上)"
-                RelayCode.ERR_BLUETOOTH_DISABLE -> msg = "设置失败: 请先开启蓝牙"
-                RelayCode.ERR_GPS_DISABLE -> msg = "设置失败: 请先开启GPS定位"
-                RelayCode.ERR_LACK_LOCATION_PERMISSION -> msg = "设置失败: 需要定位权限"
+                RelayCode.ERR_PARA_INVALID -> initMsg = "设置失败: 参数不合法"
+                RelayCode.ERR_NOT_SUPPORT -> initMsg = "设置失败: 系统不支持低功耗蓝牙(5.0以上)"
+                RelayCode.ERR_BLUETOOTH_DISABLE -> initMsg = "设置失败: 请先开启蓝牙"
+                RelayCode.ERR_GPS_DISABLE -> initMsg = "设置失败: 请先开启GPS定位"
+                RelayCode.ERR_LACK_LOCATION_PERMISSION -> initMsg = "设置失败: 需要定位权限"
             }
-            tv_info.text = msg
+            tv_info.text = initMsg
 
             onRelayListener = object : OnRelayListener {
                 override fun onReceive(msg: String?) {
-//                    runOnUiThread {
-//                        tv_info.text = "收到蓝牙转传数据:\n$msg"
-//                    }
                     Logger.d("app收到蓝牙数据: $msg")
                     val msgObj = mHandler.obtainMessage(MSG_TYPE_SHOW_BLE_DATA)
                     msgObj.obj = msg
                     mHandler.sendMessage(msgObj)
                 }
 
-                override fun onScanBleDevices(validBleDevices: BluetoothDevice) {
+                override fun onScanBleDevices(validBleDevices: BluetoothDevice?) {
                     super.onScanBleDevices(validBleDevices)
                     val msgObj = mHandler.obtainMessage(MSG_TYPE_FIND_NEW_BLE)
                     msgObj.obj = validBleDevices
@@ -80,15 +77,11 @@ class MainActivity : AppCompatActivity() {
             when (msg.what) {
                 MSG_TYPE_SHOW_BLE_DATA -> tv_info.text = "收到数据:\n ${msg.obj}"
                 MSG_TYPE_FIND_NEW_BLE -> {
-//                    val device = msg.obj as BluetoothDevice
-//                    tv_ble_list.append("${device.name}  ${device.address}")
-
                     val bleDeviceList = BleHelper.getBleDeviceList() ?: listOf()
                     tv_ble_list.text = "device list:"
                     for (dev in bleDeviceList) {
                         tv_ble_list.append("\n${dev.address} ${dev.name} ")
                     }
-//                    tv_ble_list.append(bleDeviceList?.forEach {  })
                 }
             }
         }

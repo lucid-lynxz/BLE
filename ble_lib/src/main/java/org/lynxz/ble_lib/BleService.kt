@@ -68,7 +68,7 @@ class BleService : Service() {
         override fun onFinish() {
             Logger.d("mCountDownTimer 已超时", TAG)
             // todo 超时进行下一台设备的传送
-//            skipToNextDevice()
+            skipToNextDevice()
         }
     }
 
@@ -208,7 +208,6 @@ class BleService : Service() {
             }
         }
 
-        // todo mGattCallback 回调功能
         mGattCallback = object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 super.onConnectionStateChange(gatt, status, newState)
@@ -305,6 +304,28 @@ class BleService : Service() {
             Logger.d("record ble service successfully $address ${device.name}")
             mOnRelayListener?.onScanBleDevices(device)
         }
+    }
+
+    /**
+     * 情景:
+     * 1. 本轮设备连接发送超时后删除本设备并进行下一台设备的尝试
+     * 2. 连接其他ble设备成功后,也成功扫描了service,但无本app指定的UUID的service,则删除本设备记录并进行下一台连接尝试
+     */
+    private fun skipToNextDevice() {
+        mHandler.removeMessages(MSG_TYPE_SEND_DATA_TO_NEXT)
+        if (mDevices.size > 0 && currentRelayBleIndex < mDevices.size) {
+            // 一般是该广播信号已失效,移除该设备,后需有需要的话重新扫描
+            val device = mDevices[currentRelayBleIndex]
+            val address = device.address
+            mBleAddressSet.remove(address)
+            mDevices.removeAt(currentRelayBleIndex)
+            currentRelayBleIndex -= 1
+        }
+
+        val msg = mHandler.obtainMessage(MSG_TYPE_SEND_DATA_TO_NEXT)
+        mHandler.sendMessage(msg)
+
+        mOnRelayListener?.onScanBleDevices(null)
     }
 
     /**
