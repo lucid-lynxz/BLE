@@ -32,7 +32,7 @@
         android:text="startAdvertising"
         android:textAllCaps="false"
         app:layout_constraintBottom_toBottomOf="@+id/btn_start_scan"
-        app:layout_constraintHorizontal_bias="0.519"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toRightOf="@+id/btn_start_scan"
         app:layout_constraintRight_toRightOf="parent"/>
 
@@ -59,24 +59,32 @@
         android:text="stopAdvertising"
         android:textAllCaps="false"
         app:layout_constraintBottom_toBottomOf="@+id/btn_stop_scan"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toRightOf="@+id/btn_stop_scan"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/btn_stop_scan"/>
+        app:layout_constraintTop_toTopOf="@+id/btn_stop_scan"
+        app:layout_constraintVertical_bias="0.0"/>
 
     <EditText
         android:id="@+id/edt_relay_info"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="20dp"
         android:hint="请输入要转传的数据"
+        android:paddingLeft="0dp"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintHorizontal_weight="0.9"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/btn_send"
         app:layout_constraintTop_toBottomOf="@+id/btn_stop_scan"/>
 
     <Button
         android:id="@+id/btn_send"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="-8dp"
+        android:layout_marginRight="8dp"
         android:text="send"
         android:textAllCaps="false"
         app:layout_constraintBottom_toBottomOf="@+id/edt_relay_info"
@@ -87,20 +95,15 @@
         android:id="@+id/tv_info"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginLeft="16dp"
         android:layout_marginRight="8dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="17dp"
         android:text="Hello World!"
         android:textAllCaps="false"
-        app:layout_constraintBottom_toTopOf="@+id/tv_ble_list"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="@+id/edt_relay_info"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edt_relay_info"
-        app:layout_constraintVertical_bias="0.055"/>
+        app:layout_constraintTop_toBottomOf="@+id/edt_relay_info"/>
 
 
     <TextView
@@ -109,16 +112,41 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginLeft="16dp"
         android:layout_marginRight="8dp"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="ble device list:"
+        android:text="ble device list:\n"
         android:textAllCaps="false"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="@+id/edt_relay_info"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_info"
         app:layout_constraintVertical_bias="0.055"/>
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="8dp"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="0dp"/>
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="81dp"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="81dp"/>
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="376dp"
+        tools:layout_editor_absoluteX="376dp"
+        tools:layout_editor_absoluteY="0dp"/>
 </android.support.constraint.ConstraintLayout>

@@ -2,6 +2,7 @@ package org.lynxz.ble_lib
 
 import android.Manifest
 import android.annotation.TargetApi
+import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -26,12 +27,14 @@ object BleHelper : BaseRelayHelper() {
     var mEnable: Boolean = false // 接收/转传和广播功能是否可用
     val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
+            Logger.d("service断开  $name")
+            //todo 处理
         }
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             mBleBinder = service as BleService.BleBinder?
             mBleBinder?.onRelayListener = onRelayListener
-            Logger.d("连接service成功", TAG)
+            Logger.d("连接service成功 $name", TAG)
             if (mEnable) start()
         }
     }
@@ -45,29 +48,8 @@ object BleHelper : BaseRelayHelper() {
         mBleBinder?.startScanLeDevices()
     }
 
-    fun startScan() {
-        mEnable = true
-        mBleBinder?.startScanLeDevices()
-    }
-
-    fun stopScan() {
-        mEnable = false
-        mBleBinder?.stopScanLeDevices()
-    }
-
-    fun startAdvertising() {
-        mEnable = true
-        mBleBinder?.startAdvertising()
-    }
-
-    fun stopAdvertising() {
-        mEnable = false
-        mBleBinder?.stopAdvertising()
-    }
-
-
     /**
-     * 停止接收和转传和广播
+     * 停止扫描和广播
      * */
     fun stop() {
         mEnable = false
@@ -75,6 +57,47 @@ object BleHelper : BaseRelayHelper() {
         mBleBinder?.stopScanLeDevices()
     }
 
+    /**
+     * 开始扫描ble设备
+     * */
+    fun startScan() {
+        mEnable = true
+        mBleBinder?.startScanLeDevices()
+    }
+
+    /**
+     * 停止扫描ble设备
+     * */
+    fun stopScan() {
+        mEnable = false
+        mBleBinder?.stopScanLeDevices()
+    }
+
+    /**
+     * 开启广播模式,可以作为 peripheral 设备
+     * */
+    fun startAdvertising() {
+        mEnable = true
+        mBleBinder?.startAdvertising()
+    }
+
+    /**
+     * 停止广播模式
+     * */
+    fun stopAdvertising() {
+        mEnable = false
+        mBleBinder?.stopAdvertising()
+    }
+
+    /**
+     * 获取扫描到的符合要求的ble设备列表
+     * 若为可能返回null
+     * */
+    fun getBleDeviceList(): List<BluetoothDevice>? = mBleBinder?.getBleDeviceList()
+
+    /**
+     * 初始化context并连接service
+     * */
     override fun init(context: Context): Int {
         if (mContext == null) {
             Logger.logLevel = Logger.DEBUG_LEVEL
@@ -125,19 +148,34 @@ object BleHelper : BaseRelayHelper() {
         if (!hasLocationPermission) {
             return RelayCode.ERR_LACK_LOCATION_PERMISSION
         }
-
-        BlePara.mode = mode
-        BlePara.desKey = finalDesKey
-        BlePara.adCharacteristicValue = adCharacteristicValue
-        updateBleService()
+        updateBleService(mode, finalDesKey, adCharacteristicValue)
         return RelayCode.SUCCESS
     }
 
     /**
-     * todo 按照用户设定的新参数来更新service动作
+     * 按照用户设定的新参数来更新service动作
+     * 各参数已判定为valid
      * */
-    private fun updateBleService() {
+    private fun updateBleService(mode: Int, finalDesKey: String, adCharacteristicValue: String) {
+        if (BlePara.adCharacteristicValue != adCharacteristicValue) {
+            BlePara.adCharacteristicValue = adCharacteristicValue
+            stopAdvertising()
+        }
 
+        BlePara.desKey = finalDesKey
+
+        if (BlePara.mode != mode) {
+            BlePara.mode = mode
+            stop()
+
+            when (mode) {
+                BleConstant.MODE_CENTRAL_ONLY -> startScan()
+                BleConstant.MODE_PERIPHERAL_ONLY -> startAdvertising()
+                BleConstant.MODE_BOTH -> start()
+            }
+        } else {
+            startAdvertising()
+        }
     }
 
     override fun relayData(msg: String?): Int {

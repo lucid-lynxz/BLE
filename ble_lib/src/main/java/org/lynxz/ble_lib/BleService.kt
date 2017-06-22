@@ -66,7 +66,8 @@ class BleService : Service() {
 
         @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         override fun onFinish() {
-            Logger.d("mCountDownTimer 已超时,进行下一台设备的数据发送", TAG)
+            Logger.d("mCountDownTimer 已超时", TAG)
+            // todo 超时进行下一台设备的传送
 //            skipToNextDevice()
         }
     }

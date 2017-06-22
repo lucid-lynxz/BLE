@@ -29,14 +29,15 @@ class MainActivity : AppCompatActivity() {
             val updatePara = updatePara(this@MainActivity, BleConstant.MODE_BOTH, keyInfo, null)
             Logger.d("更新ble参数结果: $updatePara  ${keyInfo.toByteArray().size}")
 
+            var msg = "设置参数成功"
             when (updatePara) {
-                RelayCode.SUCCESS -> showToast("设置参数成功")
-                RelayCode.ERR_PARA_INVALID -> showToast("设置失败: 参数不合法")
-                RelayCode.ERR_NOT_SUPPORT -> showToast("设置失败: 系统不支持低功耗蓝牙")
-                RelayCode.ERR_BLUETOOTH_DISABLE -> showToast("设置失败: 请先开启蓝牙")
-                RelayCode.ERR_GPS_DISABLE -> showToast("设置失败: 请先开启GPS定位")
-                RelayCode.ERR_LACK_LOCATION_PERMISSION -> showToast("设置失败: 需要定位权限")
+                RelayCode.ERR_PARA_INVALID -> msg = "设置失败: 参数不合法"
+                RelayCode.ERR_NOT_SUPPORT -> msg = "设置失败: 系统不支持低功耗蓝牙(5.0以上)"
+                RelayCode.ERR_BLUETOOTH_DISABLE -> msg = "设置失败: 请先开启蓝牙"
+                RelayCode.ERR_GPS_DISABLE -> msg = "设置失败: 请先开启GPS定位"
+                RelayCode.ERR_LACK_LOCATION_PERMISSION -> msg = "设置失败: 需要定位权限"
             }
+            tv_info.text = msg
 
             onRelayListener = object : OnRelayListener {
                 override fun onReceive(msg: String?) {
@@ -77,14 +78,19 @@ class MainActivity : AppCompatActivity() {
     private val mHandler = object : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                MSG_TYPE_SHOW_BLE_DATA ->
-                    tv_info.text = "收到数据: ${msg.obj}"
+                MSG_TYPE_SHOW_BLE_DATA -> tv_info.text = "收到数据:\n ${msg.obj}"
                 MSG_TYPE_FIND_NEW_BLE -> {
-                    val device = msg.obj as BluetoothDevice
-                    tv_ble_list.append("${device.name}  ${device.address}")
+//                    val device = msg.obj as BluetoothDevice
+//                    tv_ble_list.append("${device.name}  ${device.address}")
+
+                    val bleDeviceList = BleHelper.getBleDeviceList() ?: listOf()
+                    tv_ble_list.text = "device list:"
+                    for (dev in bleDeviceList) {
+                        tv_ble_list.append("\n${dev.address} ${dev.name} ")
+                    }
+//                    tv_ble_list.append(bleDeviceList?.forEach {  })
                 }
             }
-
         }
     }
 
@@ -98,9 +104,6 @@ class MainActivity : AppCompatActivity() {
                     Logger.d("request result = " + accept!!)
                     if (!accept) {
                         showToast("ble转传功能需要定位权限,否则可能扫描不到设备")
-                    } else {
-                        BleHelper.start()
-                        Logger.d("开启ble功能")
                     }
                 }
     }
