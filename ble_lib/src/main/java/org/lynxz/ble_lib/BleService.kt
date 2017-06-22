@@ -48,6 +48,8 @@ class BleService : Service() {
     private var mGattCallback: BluetoothGattCallback? = null
     private var mGatt: BluetoothGatt? = null//当前连接的ble设备管理器
 
+    private var mOnRelayListener: OnRelayListener? = null
+
     val mGattServerCallBack: GattServerCallBack by lazy {
         val gatt = GattServerCallBack()
         gatt.onRelayListener = mBinder.onRelayListener
@@ -300,6 +302,7 @@ class BleService : Service() {
             mDevices.add(device)
             mBleAddressSet.add(address)
             Logger.d("record ble service successfully $address ${device.name}")
+            mOnRelayListener?.onScanBleDevices(device)
         }
     }
 
@@ -358,6 +361,7 @@ class BleService : Service() {
             set(value) {
                 field = value
                 mGattServerCallBack.onRelayListener = value
+                mOnRelayListener = value
             }
 
 
@@ -379,9 +383,9 @@ class BleService : Service() {
             val msg = mHandler.obtainMessage(MSG_TYPE_AUTO_STOP_SCAN)
             mHandler.sendMessageDelayed(msg, AUTO_STOP_SCAN_DELAY)
             /*
-                 * 定制开始重新扫描ble设备
-                 * 目前设定是每2分钟头10s扫描,即间隔50s执行一次10s的扫描
-                 */
+             * 定制开始重新扫描ble设备
+             * 目前设定是每2分钟头10s扫描,即间隔50s执行一次10s的扫描
+             */
             mHandler.postDelayed(mStartScanRunnable, 120000)
         }
 
@@ -435,12 +439,14 @@ class BleService : Service() {
         fun relayData(msg: String?) {
             if (msg != null && msg.isNotEmpty()) {
                 mCurrentRelayMsg = msg
-//                val msgNext = mHandler.obtainMessage(MSG_TYPE_START_SEND_DATA)
-//                msgNext.obj = msg
-//                mHandler.sendMessage(msgNext)
                 mHandler.sendEmptyMessage(MSG_TYPE_START_SEND_DATA)
             }
         }
+
+        /**
+         * 获取扫描到的符合要求的ble设备
+         * */
+        fun getBleDeviceList() = mDevices.toList()
 
         /**
          * 释放相关资源

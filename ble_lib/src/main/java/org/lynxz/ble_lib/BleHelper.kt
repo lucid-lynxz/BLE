@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.support.v4.content.PermissionChecker
@@ -114,8 +115,9 @@ object BleHelper : BaseRelayHelper() {
             return RelayCode.ERR_NOT_SUPPORT
         } else if (!isBluetoothOn(context)) {
             return RelayCode.ERR_BLUETOOTH_DISABLE
+        } else if (!context.isProviderEnable(LocationManager.GPS_PROVIDER)) {
+            return RelayCode.ERR_GPS_DISABLE
         }
-        // todo by zxz 20170621 判断用户手机gps定位是否开启,若未开启,则可能无法扫描到其他设备
 
         // 需要定位权限
         val hasLocationPermission =

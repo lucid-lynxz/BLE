@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import android.text.TextUtils
 import android.widget.Toast
@@ -98,4 +99,18 @@ fun Context.showToast(msg: String) {
 
 fun Context.showToast(msgId: Int) {
     Toast.makeText(this, msgId, Toast.LENGTH_SHORT).show()
+}
+
+/**
+ * 检查指定的 provider 定位功能是否开启,默认为 gps
+ * 若传入多个 provider 字符串(String... provider),只要一个有开启就返回true
+ * 低功耗蓝牙扫描时需要开启gps,否则搜索不到设备
+ */
+fun Context.isProviderEnable(vararg providers: String): Boolean {
+    val service = getSystemService(Context.LOCATION_SERVICE) ?: return false
+    val locationManager = service as LocationManager
+    return providers
+            .map { locationManager.isProviderEnabled(it) }
+            .any { it }
+
 }
