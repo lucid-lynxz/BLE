@@ -14,7 +14,7 @@ publish {
     userOrg = 'lucid-lynxz'
     groupId = 'org.lynxz.ble'
     artifactId = 'ble'
-    publishVersion = '0.0.8'
+    publishVersion = '0.1.0'
     website = 'https://github.com/lucid-lynxz/BLE'
 }
 
@@ -40,7 +40,7 @@ android {
         minSdkVersion min_sdk_version
         targetSdkVersion target_sdk_version
         versionCode 1
-        versionName "0.0.2"
+        versionName "0.1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
