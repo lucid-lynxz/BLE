@@ -12,10 +12,17 @@ publish {
     dryRun = false
 
     userOrg = 'lucid-lynxz'
-    groupId = 'org.lynxz.ble'
-    artifactId = 'ble'
-    publishVersion = '0.1.0'
+    groupId = 'org.lynxz.ble' // 包名
+    artifactId = 'ble' // library的名字
+    publishVersion = '0.1.2' //  版本号
+    desc = 'Android ble 读写发送数据demo' // library描述
     website = 'https://github.com/lucid-lynxz/BLE'
+}
+
+tasks.withType(Javadoc) {//防止编码问题
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
+    options.addStringOption('charSet', 'UTF-8')
 }
 
 kotlin {
@@ -27,9 +34,9 @@ buildscript {
     repositories {
         jcenter()
     }
-    dependencies {
-        classpath "com.novoda:bintray-release:$novoda_bintray_release"
-    }
+//    dependencies {
+//        classpath "com.novoda:bintray-release:$novoda_bintray_release"
+//    }
 }
 
 android {
@@ -39,8 +46,8 @@ android {
     defaultConfig {
         minSdkVersion min_sdk_version
         targetSdkVersion target_sdk_version
-        versionCode 1
-        versionName "0.1.0"
+        versionCode 2
+        versionName "0.1.1"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 

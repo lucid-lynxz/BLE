@@ -41,7 +41,8 @@ dependencies {
 
     // ble 模块
     compile project(':ble_lib')
-
+//    compile 'org.lynxz.ble:ble:0.1.1'
+    
     // 权限
     compile "com.tbruyelle.rxpermissions2:rxpermissions:$rx_permission_version"
     // gson
