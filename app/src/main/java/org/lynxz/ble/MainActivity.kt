@@ -47,10 +47,10 @@ class MainActivity : AppCompatActivity() {
                     mHandler.sendMessage(msgObj)
                 }
 
-                override fun onScanBleDevices(validBleDevices: BluetoothDevice?) {
-                    super.onScanBleDevices(validBleDevices)
+                override fun onScanBleDevices(bleDevices: BluetoothDevice?) {
+                    super.onScanBleDevices(bleDevices)
                     val msgObj = mHandler.obtainMessage(MSG_TYPE_FIND_NEW_BLE)
-                    msgObj.obj = validBleDevices
+                    msgObj.obj = bleDevices
                     mHandler.sendMessage(msgObj)
                 }
             }
@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         val rxPermissions = RxPermissions(this)
         rxPermissions.request(Manifest.permission.ACCESS_FINE_LOCATION)
                 .subscribe { accept ->
-                    Logger.d("request result = " + accept!!)
+                    Logger.d("request result = $accept")
                     if (!accept) {
                         showToast("ble转传功能需要定位权限,否则可能扫描不到设备")
                     }

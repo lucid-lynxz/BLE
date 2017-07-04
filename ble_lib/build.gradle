@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'org.jetbrains.dokka-android'
 apply plugin: 'com.novoda.bintray-release' // must be applied after your artifact generating plugin (eg. java / com.android.library)
 
 publish {
@@ -14,9 +15,14 @@ publish {
     userOrg = 'lucid-lynxz'
     groupId = 'org.lynxz.ble' // 包名
     artifactId = 'ble' // library的名字
-    publishVersion = '0.1.0' //  版本号
+    publishVersion = '0.1.1' //  版本号
     desc = 'Android ble 读写发送数据demo' // library描述
     website = 'https://github.com/lucid-lynxz/BLE'
+}
+
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/javadoc"
 }
 
 android.libraryVariants.all { variant ->

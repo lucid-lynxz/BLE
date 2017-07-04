@@ -11,6 +11,7 @@ buildscript {
 
         kotlin_version = '1.1.2-3'
         kotlinx_version = '0.16'
+        dokka_version = '0.9.14'
 
         novoda_bintray_release = '0.5.0'
 
@@ -29,7 +30,7 @@ buildscript {
         classpath "com.android.tools.build:gradle:$gradle_version"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.novoda:bintray-release:$novoda_bintray_release"
-
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
